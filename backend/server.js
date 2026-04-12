@@ -17,5 +17,7 @@ mongoose.connect(process.env.MONGO_URI)
 app.get("/", (req, res) => {
   res.send("Backend Running ");
 });
+// const aiRoutes = require("./routes/aiRoutes");
+// app.use("/api/ai", aiRoutes);
 app.listen(5000, () => console.log("Server running on 5000"));
 console.log(process.env.MONGO_URI);
