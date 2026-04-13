@@ -50,8 +50,52 @@ router.post("/chat", (req, res) => {
     }
     res.json({ reply });
   } catch (error) {
-    console.error("AI Route Error:", error);
+    console.error("Chatbot Error:", error);
     res.status(500).json({ reply: "Server error" });
+  }
+});
+router.post("/analyze-report", (req, res) => {
+  try {
+    const { report } = req.body;
+
+    if (!report) {
+      return res.json({
+        analysis: ["Please enter report"],
+        doctor: ""
+      });
+    }
+    const text = report.toLowerCase();
+    let doctor = "General Physician";
+    let analysis = [];
+    if (text.includes("heart")) {
+      doctor = "Cardiologist";
+      analysis.push("Possible heart-related issue");
+    }
+    if (text.includes("skin")) {
+      doctor = "Dermatologist";
+      analysis.push("Skin-related condition");
+    }
+    if (text.includes("bone")) {
+      doctor = "Orthopedic";
+      analysis.push("Bone or joint issue");
+    }
+    if (text.includes("sugar") || text.includes("diabetes")) {
+      doctor = "Endocrinologist";
+      analysis.push("High sugar / diabetes indication");
+    }
+    if (analysis.length === 0) {
+      analysis.push("General health issue detected");
+    }
+    res.json({
+      analysis,
+      doctor
+    });
+  } catch (error) {
+    console.error("Report Error:", error);
+    res.status(500).json({
+      analysis: ["Server error"],
+      doctor: ""
+    });
   }
 });
 module.exports = router;
