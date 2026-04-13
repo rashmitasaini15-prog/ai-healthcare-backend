@@ -13,6 +13,8 @@ const aiRoutes = require("./routes/aiRoutes");
 app.use("/api/ai", aiRoutes);
 const reportRoutes = require("./routes/reportRoutes");
 app.use("/api/report", reportRoutes);
+const prescriptionRoutes = require("./routes/prescriptionRoutes");
+app.use("/api/prescription", prescriptionRoutes);
 app.get("/", (req, res) => {
   res.send("Backend Running 🚀");
 });
