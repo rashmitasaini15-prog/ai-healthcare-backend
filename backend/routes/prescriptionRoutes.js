@@ -3,30 +3,19 @@ const router = express.Router();
 const Prescription = require("../models/Prescription");
 router.post("/add", async (req, res) => {
   try {
-    const { patientId, doctorId, medicines } = req.body;
-    if (!patientId || !doctorId || !medicines) {
-      return res.status(400).json({ error: "Missing fields" });
-    }
-    const data = new Prescription({
+    const { patientId, doctorId, appointmentId, medicines } = req.body;
+    console.log("BACKEND RECEIVED:", req.body);
+    const newData = new Prescription({
       patientId,
       doctorId,
+      appointmentId: appointmentId || "NOT_SENT", 
       medicines
     });
-    await data.save();
-    res.json({ message: "Prescription added" });
+    await newData.save();
+    res.json({ message: "Saved " });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-router.get("/:patientId", async (req, res) => {
-  try {
-    const data = await Prescription.find({
-      patientId: req.params.patientId
-    });
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ message: "Error " });
   }
 });
 module.exports = router;
