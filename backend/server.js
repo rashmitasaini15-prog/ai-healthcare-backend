@@ -17,6 +17,8 @@ const prescriptionRoutes = require("./routes/prescriptionRoutes");
 app.use("/api/prescription", prescriptionRoutes);
 const reminderRoutes = require("./routes/reminderRoutes");
 app.use("/api/reminder", reminderRoutes);
+const chatRoutes = require("./routes/chatRoutes");
+app.use("/api/chat", chatRoutes);
 app.get("/", (req, res) => {
   res.send("Backend Running ");
 });
