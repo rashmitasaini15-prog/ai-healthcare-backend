@@ -1,33 +1,27 @@
 const express = require("express");
 const router = express.Router();
-let messages = [];
-router.post("/send", (req, res) => {
+const Chat = require("../models/Chat");
+router.post("/send", async (req, res) => {
   try {
     const { sender, receiver, text } = req.body;
-    if (!sender || !receiver || !text) {
-      return res.status(400).json({ message: "Missing fields " });
-    }
-    messages.push({
-      sender,
-      receiver,
-      text,
-      time: new Date().toLocaleTimeString()
-    });
+    const newMsg = new Chat({ sender, receiver, text });
+    await newMsg.save();
     res.json({ message: "Sent " });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Error " });
   }
 });
-router.get("/:user1/:user2", (req, res) => {
+router.get("/:user1/:user2", async (req, res) => {
   try {
     const { user1, user2 } = req.params;
 
-    const chat = messages.filter(
-      (m) =>
-        (m.sender === user1 && m.receiver === user2) ||
-        (m.sender === user2 && m.receiver === user1)
-    );
+    const chat = await Chat.find({
+      $or: [
+        { sender: user1, receiver: user2 },
+        { sender: user2, receiver: user1 }
+      ]
+    });
     res.json(chat);
   } catch (err) {
     console.log(err);
