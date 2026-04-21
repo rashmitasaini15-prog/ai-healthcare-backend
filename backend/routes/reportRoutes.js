@@ -3,61 +3,30 @@ const router = express.Router();
 const multer = require("multer");
 const fs = require("fs");
 const pdfParse = require("pdf-parse");
-const upload = multer({
-  dest: "uploads/"
-});
+const upload = multer({ dest: "uploads/" });
 router.post("/analyze", async (req, res) => {
   try {
     const { report } = req.body;
-    const text = (report || "").toLowerCase();
+    const text = report || "";
     let analysis = [];
-    let doctor = "General Physician";
-    if (
-      text.includes("glucose") ||
-      text.includes("sugar")
-    ) {
-      analysis.push(
-        "Possible high sugar levels detected."
-      );
-      doctor = "Diabetologist";
-    }
-    if (
-      text.includes("hemoglobin")
-    ) {
-      analysis.push(
-        "Check hemoglobin values for anemia risk."
-      );
-    }
-    if (
-      text.includes("thyroid")
-    ) {
-      analysis.push(
-        "Possible thyroid related issue."
-      );
-      doctor = "Endocrinologist";
-    }
-    if (
-      text.includes("vitamin d")
-    ) {
-      analysis.push(
-        "Vitamin D deficiency may cause weakness."
-      );
-    }
-    if (analysis.length === 0) {
-      analysis.push(
-        "No major issue detected."
-      );
+    let summary = "";
+    if (text.length < 10) {
+      analysis.push("Please enter more text.");
+    } else {
+      summary = text.slice(0, 300);
+
+      analysis.push("Document analyzed successfully.");
+      analysis.push("Main topic extracted.");
+      analysis.push("Use this content for learning or review.");
     }
     res.json({
-      analysis,
-      doctor
+      extractedText: text,
+      summary,
+      analysis
     });
   } catch (err) {
-    console.log(err);
-
     res.status(500).json({
-      message:
-        "Text analysis failed"
+      message: "Analysis failed"
     });
   }
 });
@@ -68,75 +37,56 @@ router.post(
     try {
       if (!req.file) {
         return res.status(400).json({
-          message:
-            "No PDF selected"
+          message: "No PDF selected"
         });
       }
-      const filePath =
-        req.file.path;
-      const dataBuffer =
-        fs.readFileSync(filePath);
-      const pdfData =
-        await pdfParse(dataBuffer);
+      const buffer =
+        fs.readFileSync(req.file.path);
+      const pdf =
+        await pdfParse(buffer);
       const text =
-        pdfData.text || "";
-      const lower =
-        text.toLowerCase();
+        pdf.text || "";
       let analysis = [];
-      let doctor =
-        "General Physician";
-      if (
-        lower.includes("glucose") ||
-        lower.includes("sugar")
-      ) {
+      let summary = "";
+      if (text.length < 20) {
         analysis.push(
-          "Possible high sugar levels detected."
+          "Very little readable text found. PDF may be scanned image."
         );
-        doctor =
-          "Diabetologist";
-      }
-      if (
-        lower.includes("hemoglobin")
-      ) {
+      } else {
+        summary =
+          text.slice(0, 500);
         analysis.push(
-          "Check hemoglobin values for anemia risk."
+          "PDF scanned successfully."
         );
-      }
-      if (
-        lower.includes("thyroid")
-      ) {
         analysis.push(
-          "Possible thyroid related issue."
+          "Key content extracted."
         );
-        doctor =
-          "Endocrinologist";
+        if (
+          text.toLowerCase().includes("hemoglobin")
+        ) {
+          analysis.push(
+            "Medical terms found."
+          );
+        }
+        if (
+          text.toLowerCase().includes("algorithm")
+        ) {
+          analysis.push(
+            "Technical/education content found."
+          );
+        }
       }
-      if (
-        lower.includes("vitamin d")
-      ) {
-        analysis.push(
-          "Vitamin D deficiency may cause weakness."
-        );
-      }
-      if (analysis.length === 0) {
-        analysis.push(
-          "No major issue detected."
-        );
-      }
-      fs.unlinkSync(filePath);
+      fs.unlinkSync(req.file.path);
       res.json({
         extractedText: text,
-        analysis,
-        doctor
+        summary,
+        analysis
       });
     } catch (err) {
-      console.log(
-        "PDF ERROR:",
-        err
-      );
+      console.log(err);
       res.status(500).json({
         message:
-          "Unable to read PDF"
+          "Unable to scan PDF"
       });
     }
   }
