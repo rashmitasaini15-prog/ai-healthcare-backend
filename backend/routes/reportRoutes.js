@@ -3,7 +3,9 @@ const router = express.Router();
 const multer = require("multer");
 const fs = require("fs");
 const pdfParse = require("pdf-parse");
-const upload = multer({ dest: "uploads/" });
+const upload = multer({
+  dest: "uploads/"
+});
 router.post("/analyze", async (req, res) => {
   try {
     const { report } = req.body;
@@ -11,13 +13,21 @@ router.post("/analyze", async (req, res) => {
     let analysis = [];
     let summary = "";
     if (text.length < 10) {
-      analysis.push("Please enter more text.");
+      analysis.push(
+        "Please enter more text."
+      );
     } else {
-      summary = text.slice(0, 300);
-
-      analysis.push("Document analyzed successfully.");
-      analysis.push("Main topic extracted.");
-      analysis.push("Use this content for learning or review.");
+      summary =
+        text.slice(0, 300);
+      analysis.push(
+        "Document analyzed successfully."
+      );
+      analysis.push(
+        "Main topic extracted."
+      );
+      analysis.push(
+        "Use this content for learning or review."
+      );
     }
     res.json({
       extractedText: text,
@@ -26,7 +36,8 @@ router.post("/analyze", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
-      message: "Analysis failed"
+      message:
+        "Analysis failed"
     });
   }
 });
@@ -37,46 +48,78 @@ router.post(
     try {
       if (!req.file) {
         return res.status(400).json({
-          message: "No PDF selected"
+          message:
+            "No PDF selected"
         });
       }
-      const buffer =
-        fs.readFileSync(req.file.path);
-      const pdf =
-        await pdfParse(buffer);
+      const filePath =
+        req.file.path;
+      const dataBuffer =
+        fs.readFileSync(
+          filePath
+        );
+      let pdfData;
+      try {
+        pdfData =
+          await pdfParse(
+            dataBuffer
+          );
+      } catch (parseErr) {
+        fs.unlinkSync(
+          filePath
+        );
+        return res.status(500).json({
+          message:
+            "PDF text extraction failed"
+        });
+      }
       const text =
-        pdf.text || "";
+        pdfData.text || "";
+      fs.unlinkSync(
+        filePath
+      );
       let analysis = [];
       let summary = "";
-      if (text.length < 20) {
+      if (
+        text.trim().length < 5
+      ) {
         analysis.push(
-          "Very little readable text found. PDF may be scanned image."
+          "PDF has little readable text. It may be image scanned."
         );
       } else {
         summary =
           text.slice(0, 500);
+
         analysis.push(
           "PDF scanned successfully."
         );
+
         analysis.push(
-          "Key content extracted."
+          "Content extracted."
         );
         if (
-          text.toLowerCase().includes("hemoglobin")
+          text
+            .toLowerCase()
+            .includes(
+              "hemoglobin"
+            )
         ) {
           analysis.push(
             "Medical terms found."
           );
         }
         if (
-          text.toLowerCase().includes("algorithm")
+          text
+            .toLowerCase()
+            .includes(
+              "algorithm"
+            )
         ) {
           analysis.push(
-            "Technical/education content found."
+            "Technical / educational content found."
           );
         }
       }
-      fs.unlinkSync(req.file.path);
       res.json({
         extractedText: text,
         summary,
